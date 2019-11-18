@@ -50,6 +50,9 @@ const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 
+const lessRegex = /\.(less|less)$/;
+const lessModuleRegex = /\.module\.(less|less)$/;
+
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 module.exports = function(webpackEnv) {
@@ -81,7 +84,7 @@ module.exports = function(webpackEnv) {
   const env = getClientEnvironment(publicUrl);
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions, lessOptions, preProcessor) => {
     const loaders = [
       isEnvDevelopment && require.resolve('style-loader'),
       isEnvProduction && {
@@ -91,6 +94,10 @@ module.exports = function(webpackEnv) {
       {
         loader: require.resolve('css-loader'),
         options: cssOptions,
+      },
+      {
+        loader: require.resolve('less-loader'),
+        options: lessOptions,
       },
       {
         // Options for PostCSS as we reference these options twice
@@ -474,6 +481,22 @@ module.exports = function(webpackEnv) {
                   sourceMap: isEnvProduction && shouldUseSourceMap,
                 },
                 'sass-loader'
+              ),
+              // Don't consider CSS imports dead code even if the
+              // containing package claims to have no side effects.
+              // Remove this when webpack adds a warning or an error for this.
+              // See https://github.com/webpack/webpack/issues/6571
+              sideEffects: true,
+            },
+            {
+              test: lessRegex,
+              exclude: lessModuleRegex,
+              use: getStyleLoaders(
+                {
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                },
+                'less-loader'
               ),
               // Don't consider CSS imports dead code even if the
               // containing package claims to have no side effects.
